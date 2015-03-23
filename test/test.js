@@ -92,7 +92,7 @@ describe('prevalence', function() {
       assert.deepEqual(modelValue, value);
       assert.ok(modelValue !== value);
     });
-    
+
     co_it('are executed serially (writelock)', function*() {
       var maxActive = 0;
       var active = 0;
@@ -121,16 +121,20 @@ describe('prevalence', function() {
       assert.equal(1, maxActive);
     });
 
-    co_it('invokations are logged to journal', function*() {
+    co_it('invokations are logged to/replayed from journal', function*() {
+      function connect() {
+        return createRepo({
+            model: {
+              counter: 0
+            }
+          })
+          .register('inc-counter', function*(model) {
+            return ++model.counter;
+          });
+      }
+
       // Create repository with a registered command
-      var repo = createRepo({
-          model: {
-            counter: 0
-          }
-        })
-        .register('inc-counter', function*(model) {
-          return ++model.counter;
-        });
+      var repo = connect();
       // Run command a couple of times
       for (var i = 0; i < 10; ++i) {
         yield repo.execute('inc-counter');
@@ -142,25 +146,40 @@ describe('prevalence', function() {
       // Forget repo for a while
       repo = null;
       // ...and then come back with full history
-      var counter = yield createRepo({
-          model: {
-            counter: 0
-          }
-        })
-        .register('inc-counter', function*(model) {
-          return ++model.counter;
-        })
+      var counter = yield connect()
         .query(function*(model) {
           return model.counter;
         });
       assert.equal(10, counter);
     });
+
+    co_it('command effects are persisted between sessions', function*() {
+      function connect() {
+        return createRepo({
+            model: {
+              counter: 0
+            }
+          })
+          .register('inc-counter', function*(model) {
+            return ++model.counter;
+          });
+      }
+
+      // Connect, execute and detach some times
+      for (var i = 0; i < 10; ++i) {
+        yield connect().execute('inc-counter');
+      }
+      // Connect again and check counter
+      var counter = yield connect().query(function*(model) {
+        return model.counter;
+      });
+      assert.equal(10, counter);
+    })
   });
 
   function co_it(description, gen) {
     return it(description, function(done) {
-      co(gen)
-        .then(done).catch(done);
+      co(gen).then(done).catch(done);
     })
   }
 
@@ -172,9 +191,6 @@ describe('prevalence', function() {
   function cleanRepo(done) {
     fs.unlink(journalPath)
       .then(done)
-      .catch(function(err) {
-        done();
-      });
+      .catch(done.bind(null,null));
   }
-
-})
+});
