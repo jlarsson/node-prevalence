@@ -1,7 +1,7 @@
 (function(module) {
   'use strict'
 
-  var thenify = require('thenify'),
+  let thenify = require('thenify'),
     co = require('co'),
     costream = require('co-stream'),
     debug = require('debug')('prevalence'),
@@ -18,8 +18,8 @@
   module.exports = function(options) {
     return new Repository(options)
   }
-  var ConfigurationError = module.exports.ConfigurationError = makeError('ConfigurationError')
-  var CommandError = module.exports.CommandError = makeError('CommandError')
+  let ConfigurationError = module.exports.ConfigurationError = makeError('ConfigurationError')
+  let CommandError = module.exports.CommandError = makeError('CommandError')
 
   function Repository(options) {
     options = defaults(options, {
@@ -30,18 +30,18 @@
     }
 
     // resolve journal path relative to root
-    var journalPath = path.resolve(path.dirname(require.main.filename), options.path)
+    let journalPath = path.resolve(path.dirname(require.main.filename), options.path)
     debug('journalling to %s', journalPath)
 
-    var model = options.model
+    let model = options.model
     debug('initial model is %j', model)
 
-    var isInitialized = false
-    var commands = {}
+    let isInitialized = false
+    let commands = {}
 
-    var lock = createLockObject()
-    var marshal = createMarshalFunction()
-    var appendToJournal = createJournalAppender(journalPath)
+    let lock = createLockObject()
+    let marshal = createMarshalFunction()
+    let appendToJournal = createJournalAppender(journalPath)
 
     // Register a match-unmapped-commands handler
     register('*', unregisteredCommandHandler)
@@ -71,7 +71,7 @@
       return init()
         .then(function() {
           return lock.read(function*() {
-            var res = yield queryFn(model)
+            let res = yield queryFn(model)
             return marshal(res)
           })
         })
@@ -81,14 +81,14 @@
       return init()
         .then(function() {
           return lock.write(function*() {
-            var command = {
+            let command = {
               model: model,
               name: name,
               arg: arg,
               replay: false
             }
             yield appendToJournal(command)
-            var res = yield exec(command)
+            let res = yield exec(command)
             return marshal(res)
           })
         })
@@ -103,7 +103,7 @@
           return Promise.resolve(true)
         }
         debug('initializing')
-        var replayCount = 0
+        let replayCount = 0
 
         return yield createJournalReader(journalPath, replayExec.bind(null, model, exec))
           .then(function() {
@@ -130,7 +130,7 @@
 
     // Readers/Writers lock factory
     function createLockObject() {
-      var lck = new rwlock()
+      let lck = new rwlock()
       return {
         read: lock.bind(null, 'readLock'),
         write: lock.bind(null, 'writeLock')
@@ -157,12 +157,11 @@
     // modifications to values returned from execute()/read() doesnt jeopardize
     // the stability/correctness of the managed prevalent model.
     function createMarshalFunction() {
-      var dontMarshalTheseScalarTypes = {
+      let dontMarshalTheseScalarTypes = {
         "undefined": true,
         "boolean": true,
         "number": true,
-        "string": true,
-        "function": true
+        "string": true
       }
       return function marshal(skip, value) {
         if ((value === null) || skip[typeof(value)]) {
@@ -175,7 +174,7 @@
     // A journal appender appends a json snapshot of command characteristics
     function createJournalAppender(journalPath) {
       return function appendToJournal(journalPath, command) {
-        var line = JSON.stringify({
+        let line = JSON.stringify({
           t: new Date(),
           n: command.name,
           a: command.arg
@@ -241,8 +240,7 @@
 
     // Handle unregistered commands by throwing
     function* unregisteredCommandHandler(model, arg, ctx) {
-      throw new CommandError(util.format('Unregistered command \'%s\'.\nFix: var repo = require(\'prevalence\').register(\'%s\', function *(){ ... })', ctx.name, ctx.name))
+      throw new CommandError(util.format('Unregistered command \'%s\'.\nFix: let repo = require(\'prevalence\').register(\'%s\', function *(){ ... })', ctx.name, ctx.name))
     }
-
   }
 })(module)
