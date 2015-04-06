@@ -5,9 +5,9 @@
 
 [travis-image]:https://img.shields.io/travis/jlarsson/node-prevalence.svg?style=flat
 [travis-url]: https://travis-ci.org/jlarsson/node-prevalence
-[npm-image]:https://img.shields.io/npm/v/node-prevalence.svg?style=flat
-[npm-url]:https://npmjs.org/package/node-prevalence
-[license-image]:https://img.shields.io/npm/l/node-prevalence.svg?style=flat
+[npm-image]:https://img.shields.io/npm/v/prevalence.svg?style=flat
+[npm-url]:https://npmjs.org/package/prevalence
+[license-image]:https://img.shields.io/npm/l/prevalence.svg?style=flat
 [license-url]: LICENSE.md
 
 # node-prevalence
