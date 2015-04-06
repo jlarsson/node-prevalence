@@ -134,9 +134,10 @@ describe('prevalence', function () {
           return ++model.counter
         })
       // Run command a couple of times
-      for (let i = 0; i < 10; ++i) {
-        yield repo.execute('inc-counter')
-      }
+      yield [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      .map(function (i) {
+        return repo.execute('inc-counter')
+      })
       assert.equal(10, yield repo.query(function * (model) {
         return model.counter
       }))
@@ -156,6 +157,27 @@ describe('prevalence', function () {
           return model.counter
         })
       assert.equal(10, counter)
+    })
+  })
+
+  describe('execute (<unregistered command> -> yield)', function () {
+    co_it('throws CommandError by default', function * () {
+      try {
+        yield createRepo().execute('some unknown command')
+        assert.fail('Expected CommandError')
+      } catch (err) {
+        assert.ok(err instanceof prevalence.CommandError)
+      }
+    })
+
+    co_it('is mapped to command \'*\'', function * () {
+      let result = yield createRepo()
+        .register('*', function * (model) {
+          return 'unmapped result'
+        })
+        .execute('some unknown command')
+      assert.equal('unmapped result', result)
+
     })
   })
 
