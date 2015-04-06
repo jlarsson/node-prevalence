@@ -1,10 +1,3 @@
-[travis-image]:https://img.shields.io/travis/jlarsson/node-prevalence.svg?style=flat
-[travis-url]: https://travis-ci.org/jlarsson/node-prevalence
-[npm-image]:https://img.shields.io/npm/v/prevalence.svg?style=flat
-[npm-url]:https://npmjs.org/package/prevalence
-[license-image]:https://img.shields.io/npm/l/prevalence.svg?style=flat
-[license-url]: LICENSE.md
-
 [![npm][npm-image]][npm-url]
 [![travis][travis-image]][travis-url]
 [![npm][license-image]][license-url]
@@ -17,12 +10,12 @@ Promise based, co/koa-friendly prevalence component.
 Think of it a super extensible, super fast, in-memory database that will restore it self from a history of commands.
 
 ## Sample code
-The code below two blog posts and then prints them, illustrating
+The sample code below two blog posts and then prints them, illustrating
 - command registration via ```register()```
 - command execution via ```execute()```
 - querying via ```query()```
 
-```
+```javascript
 'use strict'
 
 let path = require('path')
@@ -71,3 +64,11 @@ Prevalence acts as a simple in-memory database with very controlled access patte
 
 
 Check out [wikipedia](http://en.wikipedia.org/wiki/System_Prevalence) for a more formal definition of the prevalence pattern. Note that this implementation deviates on some key points. Most notably the support for snapshots is dropped.
+
+
+[travis-image]: https://img.shields.io/travis/jlarsson/node-prevalence.svg?style=flat
+[travis-url]: https://travis-ci.org/jlarsson/node-prevalence
+[npm-image]: https://img.shields.io/npm/v/prevalence.svg?style=flat
+[npm-url]: https://npmjs.org/package/prevalence
+[license-image]: https://img.shields.io/npm/l/prevalence.svg?style=flat
+[license-url]: LICENSE.md

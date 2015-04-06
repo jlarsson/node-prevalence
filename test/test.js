@@ -1,4 +1,4 @@
-/* global describe,it, beforeEach, afterEach */
+/* global describe, it, beforeEach, afterEach */
 'use strict'
 
 let assert = require('assert')
