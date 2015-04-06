@@ -1,8 +1,3 @@
-[![npm][npm-image]][npm-url]
-[![travis][travis-image]][travis-url]
-[![npm][license-image]][license-url]
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
-
 [travis-image]:https://img.shields.io/travis/jlarsson/node-prevalence.svg?style=flat
 [travis-url]: https://travis-ci.org/jlarsson/node-prevalence
 [npm-image]:https://img.shields.io/npm/v/prevalence.svg?style=flat
@@ -10,14 +5,19 @@
 [license-image]:https://img.shields.io/npm/l/prevalence.svg?style=flat
 [license-url]: LICENSE.md
 
+[![npm][npm-image]][npm-url]
+[![travis][travis-image]][travis-url]
+[![npm][license-image]][license-url]
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
+
 # node-prevalence
 
-Promise based, co-friendly prevalence component.
+Promise based, co/koa-friendly prevalence component.
 
 Think of it a super extensible, super fast, in-memory database that will restore it self from a history of commands.
 
 ## Sample code
-Below is a sample that creates two blog posts and then prints them, illustrating
+The code below two blog posts and then prints them, illustrating
 - command registration via ```register()```
 - command execution via ```execute()```
 - querying via ```query()```
@@ -27,7 +27,7 @@ Below is a sample that creates two blog posts and then prints them, illustrating
 
 let path = require('path')
 let co = require('co')
-let prevalence = require('../')
+let prevalence = require('prevalence')
 
 let repo = prevalence({
   path: path.resolve(__dirname, '../tmp/sample.journal'),
@@ -64,9 +64,10 @@ co(function * () {
 
 Prevalence acts as a simple in-memory database with very controlled access patterns.
 
-- Queries may inspect the data model (in parallell)
-- Commands may alter the data model (serial)
-- Commands must be described and are kept in a durable history (journal) so that the data can be restored on startup
+- Queries may inspect the data model (in parallel controlled by a read lock)
+- Commands may alter the data model (serially controlled by a write lock)
+- Commands must be described (with name and a handler) and invokations are logged with name and argument to a durable history (journal) so that the command can be re-executed on startup, thus restoring the model to the last known state.
+- Results from queries and commands are by default serialized (i.e. deep copied), eliminating some nasty race conditions.
 
 
 Check out [wikipedia](http://en.wikipedia.org/wiki/System_Prevalence) for a more formal definition of the prevalence pattern. Note that this implementation deviates on some key points. Most notably the support for snapshots is dropped.
