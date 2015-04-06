@@ -3,12 +3,12 @@
 [![npm][license-image]][license-url]
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
 
-[travis-image]: https://img.shields.io/travis/jlarsson/node-prevalence.svg?style=flat
+[travis-image]:https://img.shields.io/travis/jlarsson/node-prevalence.svg?style=flat
 [travis-url]: https://travis-ci.org/jlarsson/node-prevalence
-[npm-image]: https://img.shields.io/npm/v/node-prevalence.svg?style=flat
-[npm-url]: https://npmjs.org/package/node-prevalence
-[license-image]: https://img.shields.io/npm/l/node-prevalence.svg?style=flat
-[license-url]: LICENSE
+[npm-image]:https://img.shields.io/npm/v/node-prevalence.svg?style=flat
+[npm-url]:https://npmjs.org/package/node-prevalence
+[license-image]:https://img.shields.io/npm/l/node-prevalence.svg?style=flat
+[license-url]: LICENSE.md
 
 # node-prevalence
 
