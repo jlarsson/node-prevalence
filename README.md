@@ -1,9 +1,9 @@
+# node-prevalence
+
 [![npm][npm-image]][npm-url]
 [![travis][travis-image]][travis-url]
-[![npm][license-image]][license-url]
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
-
-# node-prevalence
+[![license][license-image]][license-url]
+[![js-standard-style][standard-image]](standard-url)
 
 Promise based, co/koa-friendly prevalence component.
 
@@ -59,7 +59,7 @@ Prevalence acts as a simple in-memory database with very controlled access patte
 
 - Queries may inspect the data model (in parallel controlled by a read lock)
 - Commands may alter the data model (serially controlled by a write lock)
-- Commands must be described (with name and a handler) and invokations are logged with name and argument to a durable history (journal) so that the command can be re-executed on startup, thus restoring the model to the last known state.
+- Commands must be described (with name and a handler) and invocations are logged with name and argument to a durable history (journal) so that the command can be re-executed on startup, thus restoring the model to the last known state.
 - Results from queries and commands are by default serialized (i.e. deep copied), eliminating some nasty race conditions.
 
 
@@ -72,3 +72,5 @@ Check out [wikipedia](http://en.wikipedia.org/wiki/System_Prevalence) for a more
 [npm-url]: https://npmjs.org/package/prevalence
 [license-image]: https://img.shields.io/npm/l/prevalence.svg?style=flat
 [license-url]: LICENSE.md
+[standard-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat
+[standard-url]: https://github.com/feross/standard

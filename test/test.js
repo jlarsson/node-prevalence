@@ -17,6 +17,8 @@ describe('prevalence', function () {
     let repo = createRepo()
 
     co_it('with literal', function * () {
+      // This test shows that query() return values
+      // can be simple JavaScript types
       let res = yield repo.query(function * () {
         return 123
       })
@@ -24,6 +26,9 @@ describe('prevalence', function () {
     })
 
     co_it('with promise', function * () {
+      // This test shows that query() return values
+      // can be promises/thenables, proving that
+      // deferred/lazy evaluation is ok
       let res = yield repo.query(function * () {
         return Promise.resolve(123)
       })
@@ -31,6 +36,8 @@ describe('prevalence', function () {
     })
 
     co_it('can be run in parallell (readlock)', function * () {
+      // This test shows that query() requires a shared read lock.
+      // It is ok to have any number of parallel query()
       let maxActive = 0
       let active = 0
       yield [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -51,6 +58,9 @@ describe('prevalence', function () {
     })
 
     co_it('marshals the result', function * () {
+      // This test shows that the result of query()
+      // is a deep copy, allowing the sanboxed model
+      // to remain isolated from the outside world
       let modelValue = {
         a: 123
       }
@@ -64,6 +74,11 @@ describe('prevalence', function () {
 
   describe('execute(* -> yield)', function () {
     co_it('command must be registered', function * () {
+      // This test shows that commands must be registered.
+      // This is since a command has both a name, and perhaps more important,
+      // associated business logic.
+      // In that sense, they are similar to SQL stored procedures.
+
       try {
         yield createRepo().execute('some unregistered command')
         assert.fail('expected throw')
@@ -83,6 +98,12 @@ describe('prevalence', function () {
     })
 
     co_it('marshals the result', function * () {
+      // This test shows that the returnvalue from a command
+      // is detached from the model.
+      // The idea is that the model/data lives in a sandbox, and since its not
+      // allowed to modify it ouside a command handler, it must be a deep copy
+      // in order to prevent accidental violations to this rule.
+
       let modelValue = {
         a: 123
       }
@@ -96,6 +117,10 @@ describe('prevalence', function () {
     })
 
     co_it('are executed serially (writelock)', function * () {
+      // This test shows that execute() requires exclusive access.
+      // In short, execute() takes a write lock, gaining exclusive access
+      // amongst all other execute() and query()
+
       let maxActive = 0
       let active = 0
 
@@ -124,6 +149,10 @@ describe('prevalence', function () {
     })
 
     co_it('invokations are logged to journal', function * () {
+      // This test simulates the case where a repo goes off line
+      // for a while and then is restored to its last known state
+      // using the journalled commands
+
       // Create repository with a registered command
       let repo = createRepo({
           model: {
@@ -162,6 +191,10 @@ describe('prevalence', function () {
 
   describe('execute (<unregistered command> -> yield)', function () {
     co_it('throws CommandError by default', function * () {
+      // This test shows that command must be registered.
+      // This applies in particular to 'old' commands in the journal
+      // For backwards compatibility its in general not safe to refactor
+      // away commands, although their meaning may be refactored
       try {
         yield createRepo().execute('some unknown command')
         assert.fail('Expected CommandError')
@@ -170,14 +203,45 @@ describe('prevalence', function () {
       }
     })
 
-    co_it('is mapped to command \'*\'', function * () {
+    co_it('command \'*\' is fallback for all unmapped commands', function * () {
+      // This test shows how one can register a catch-all command handler
       let result = yield createRepo()
         .register('*', function * (model) {
           return 'unmapped result'
         })
         .execute('some unknown command')
       assert.equal('unmapped result', result)
+    })
+  })
 
+  describe('journal replay', function () {
+    co_it('initial exception is sticky (i.e. unrecoverable)', function * () {
+      // The purpose of this test is to show that if the journal is corrupt or
+      // the journal replay fails for some reason, that initial error is
+      // reported back in all subsequent calls.
+      // If the journal replay fails, it typically requires a manual fix of
+      // some kind.
+
+      var failCount = 0
+      var failingJournal = {
+        replay: function () {
+          ++failCount
+          throw new Error('journal error')
+        }
+      }
+
+      var repo = createRepo({journal: failingJournal})
+
+      var gotErrors = yield [0, 1, 2, 3].map(function () {
+        return repo.query(function * () {})
+          .catch(function (err) {
+            assert.equal(err.message, 'journal error')
+            return true
+          })
+      })
+
+      assert.deepEqual([true, true, true, true], gotErrors)
+      assert.equal(failCount, 1, 'The journal should only be invoked once, even when failing')
     })
   })
 
