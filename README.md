@@ -1,11 +1,9 @@
-# node-prevalence
+Promise based, co/koa-friendly prevalence component.
 
 [![npm][npm-image]][npm-url]
 [![travis][travis-image]][travis-url]
 [![license][license-image]][license-url]
 [![js-standard-style][standard-image]](standard-url)
-
-Promise based, co/koa-friendly prevalence component.
 
 Think of it a super extensible, super fast, in-memory database that will restore it self from a history of commands.
 

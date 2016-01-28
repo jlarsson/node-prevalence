@@ -2,10 +2,13 @@
 'use strict'
 
 let assert = require('assert')
-let co = require('co')
 let prevalence = require('../index')
 let fs = require('mz/fs')
 let path = require('path')
+let EventEmitter = require('events')
+let Promise = require('native-or-bluebird')
+
+require('co-mocha')
 
 describe('prevalence', function () {
   let journalPath = path.resolve(__dirname, '../tmp/testjournal.log')
@@ -16,7 +19,7 @@ describe('prevalence', function () {
   describe('query(* -> yield)', function () {
     let repo = createRepo()
 
-    co_it('with literal', function * () {
+    it('with literal', function * () {
       // This test shows that query() return values
       // can be simple JavaScript types
       let res = yield repo.query(function * () {
@@ -25,7 +28,25 @@ describe('prevalence', function () {
       assert.equal(123, res)
     })
 
-    co_it('with promise', function * () {
+    it('may return undefined', function * () {
+      // This test shows that query() return values
+      // can be simple JavaScript types
+      let res = yield repo.query(function * () {
+        return undefined
+      })
+      assert(res === undefined)
+    })
+
+    it('may return null', function * () {
+      // This test shows that query() return values
+      // can be simple JavaScript types
+      let res = yield repo.query(function * () {
+        return null
+      })
+      assert(res === null)
+    })
+
+    it('with promise', function * () {
       // This test shows that query() return values
       // can be promises/thenables, proving that
       // deferred/lazy evaluation is ok
@@ -35,7 +56,7 @@ describe('prevalence', function () {
       assert.equal(123, res)
     })
 
-    co_it('can be run in parallell (readlock)', function * () {
+    it('can be run in parallell (readlock)', function * () {
       // This test shows that query() requires a shared read lock.
       // It is ok to have any number of parallel query()
       let maxActive = 0
@@ -57,7 +78,7 @@ describe('prevalence', function () {
       assert.equal(10, maxActive)
     })
 
-    co_it('marshals the result', function * () {
+    it('marshals the result', function * () {
       // This test shows that the result of query()
       // is a deep copy, allowing the sanboxed model
       // to remain isolated from the outside world
@@ -73,7 +94,7 @@ describe('prevalence', function () {
   })
 
   describe('execute(* -> yield)', function () {
-    co_it('command must be registered', function * () {
+    it('command must be registered', function * () {
       // This test shows that commands must be registered.
       // This is since a command has both a name, and perhaps more important,
       // associated business logic.
@@ -87,7 +108,7 @@ describe('prevalence', function () {
       }
     })
 
-    co_it('commands works (!)', function * () {
+    it('commands works (!)', function * () {
       let res = yield createRepo()
         .register('cmd', function * (model, arg, ctx) {
           return 123 * arg
@@ -97,7 +118,17 @@ describe('prevalence', function () {
       assert.equal(3 * 123, res)
     })
 
-    co_it('marshals the result', function * () {
+    it('may return null', function * () {
+      let res = yield createRepo()
+        .register('cmd', function * (model, arg, ctx) {
+          return null
+        })
+        .execute('cmd')
+
+      assert.equal(null, res)
+    })
+
+    it('marshals the result', function * () {
       // This test shows that the returnvalue from a command
       // is detached from the model.
       // The idea is that the model/data lives in a sandbox, and since its not
@@ -116,7 +147,7 @@ describe('prevalence', function () {
       assert.ok(modelValue !== value)
     })
 
-    co_it('are executed serially (writelock)', function * () {
+    it('are executed serially (writelock)', function * () {
       // This test shows that execute() requires exclusive access.
       // In short, execute() takes a write lock, gaining exclusive access
       // amongst all other execute() and query()
@@ -125,20 +156,18 @@ describe('prevalence', function () {
       let active = 0
 
       let repo = createRepo({
-          model: {
-            counter: 0
-          }
+        model: { counter: 0 }
+      })
+      .register('inc-counter', function * (model) {
+        return new Promise(function (resolve) {
+          ++active
+          maxActive = Math.max(active, maxActive)
+          setTimeout(function () {
+            --active
+            resolve(++model.counter)
+          }, 30)
         })
-        .register('inc-counter', function * (model) {
-          return new Promise(function (resolve) {
-            ++active
-            maxActive = Math.max(active, maxActive)
-            setTimeout(function () {
-              --active
-              resolve(++model.counter)
-            }, 30)
-          })
-        })
+      })
 
       yield [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
       .map(function (i) {
@@ -148,20 +177,20 @@ describe('prevalence', function () {
       assert.equal(1, maxActive)
     })
 
-    co_it('invokations are logged to journal', function * () {
+    it('invokations are logged to journal', function * () {
       // This test simulates the case where a repo goes off line
       // for a while and then is restored to its last known state
       // using the journalled commands
 
       // Create repository with a registered command
       let repo = createRepo({
-          model: {
-            counter: 0
-          }
-        })
-        .register('inc-counter', function * (model) {
-          return ++model.counter
-        })
+        model: {
+          counter: 0
+        }
+      })
+      .register('inc-counter', function * (model) {
+        return ++model.counter
+      })
       // Run command a couple of times
       yield [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
       .map(function (i) {
@@ -175,22 +204,22 @@ describe('prevalence', function () {
       repo = null
       // ...and then come back with full history
       let counter = yield createRepo({
-          model: {
-            counter: 0
-          }
-        })
-        .register('inc-counter', function * (model) {
-          return ++model.counter
-        })
-        .query(function * (model) {
-          return model.counter
-        })
+        model: {
+          counter: 0
+        }
+      })
+      .register('inc-counter', function * (model) {
+        return ++model.counter
+      })
+      .query(function * (model) {
+        return model.counter
+      })
       assert.equal(10, counter)
     })
   })
 
   describe('execute (<unregistered command> -> yield)', function () {
-    co_it('throws CommandError by default', function * () {
+    it('throws CommandError by default', function * () {
       // This test shows that command must be registered.
       // This applies in particular to 'old' commands in the journal
       // For backwards compatibility its in general not safe to refactor
@@ -203,7 +232,7 @@ describe('prevalence', function () {
       }
     })
 
-    co_it('command \'*\' is fallback for all unmapped commands', function * () {
+    it('command \'*\' is fallback for all unmapped commands', function * () {
       // This test shows how one can register a catch-all command handler
       let result = yield createRepo()
         .register('*', function * (model) {
@@ -212,10 +241,53 @@ describe('prevalence', function () {
         .execute('some unknown command')
       assert.equal('unmapped result', result)
     })
+
+    it('execute() emits "command" event', function * () {
+      let d = deferred()
+      let res = yield createRepo()
+        .on('command', function (name, arg, result) {
+          d.resolve({name, arg, result})
+        })
+        .register('cmd', function * (model, arg, ctx) {
+          return 123
+        })
+        .execute('cmd', 3)
+
+      assert.equal(123, res)
+
+      let emitted = yield d.promise
+      assert(emitted)
+      assert.equal(emitted.name, 'cmd')
+      assert.equal(emitted.arg, 3)
+      assert.equal(emitted.result, 123)
+    })
+  })
+
+  it('execute() emits "error" event on failure', function * () {
+    let d = deferred()
+    try {
+      yield createRepo()
+        .on('error', d.resolve)
+        .execute('some unknown command')
+      assert.fail('Expected CommandError')
+    } catch (err) {
+      assert.ok(err instanceof prevalence.CommandError)
+    }
+
+    let emittedError = yield d.promise
+    assert.ok(emittedError instanceof prevalence.CommandError)
   })
 
   describe('journal replay', function () {
-    co_it('initial exception is sticky (i.e. unrecoverable)', function * () {
+    it('emits "init" event', function * () {
+      let d = deferred()
+      yield createRepo()
+        .on('init', d.resolve)
+        .query(function * () {})
+      yield d.promise
+    })
+
+    it('initial exception is sticky (i.e. unrecoverable)', function * () {
       // The purpose of this test is to show that if the journal is corrupt or
       // the journal replay fails for some reason, that initial error is
       // reported back in all subsequent calls.
@@ -245,11 +317,17 @@ describe('prevalence', function () {
     })
   })
 
-  function co_it (description, gen) {
-    return it(description, function (done) {
-      co(gen)
-        .then(done).catch(done)
+  function deferred () {
+    // A tiny utility implementation of the deferred pattern
+    let e = new EventEmitter()
+    let p = new Promise(function (resolve, reject) {
+      e.on('resolve', resolve).on('reject', reject)
     })
+    return {
+      promise: p,
+      resolve: function (v) { e.emit('resolve', v) },
+      reject: function (e) { e.emit('reject', e) }
+    }
   }
 
   function createRepo (options) {
