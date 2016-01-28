@@ -246,7 +246,7 @@ describe('prevalence', function () {
       let d = deferred()
       let res = yield createRepo()
         .on('command', function (name, arg, result) {
-          d.resolve({name, arg, result})
+          d.resolve({name: name, arg: arg, result: result})
         })
         .register('cmd', function * (model, arg, ctx) {
           return 123
