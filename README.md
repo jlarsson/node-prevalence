@@ -51,6 +51,13 @@ co(function * () {
 })
 ```
 
+## Events
+```javascript
+let repo = prevalence({...})
+  .on('init', () => console.log('One time restore of journal complete'))
+  .on('command', (name, arg, result) => {...})
+  .on('error', e => console.log(e.stack))
+```
 ## Overview
 
 Prevalence acts as a simple in-memory database with very controlled access patterns.
