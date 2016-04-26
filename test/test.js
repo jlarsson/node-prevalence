@@ -6,7 +6,7 @@ let prevalence = require('../index')
 let fs = require('mz/fs')
 let path = require('path')
 let EventEmitter = require('events')
-let Promise = require('native-or-bluebird')
+let Promise = require('any-promise')
 
 require('co-mocha')
 
